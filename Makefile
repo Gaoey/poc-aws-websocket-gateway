@@ -1,5 +1,5 @@
 build:
-	go build -o scale-websocket ./cmd/server/main.go
+	go build -o poc-aws-websocket-gateway ./cmd/server/main.go
 
 test:
 	go test ./...
@@ -9,7 +9,5 @@ clean:
 	rm -f scale-websocket
 
 run-server:
-	go run ./cmd/server/main.go
+	go run ./cmd/main.go
 
-run-client:
-	cd ./client && npm run dev 
