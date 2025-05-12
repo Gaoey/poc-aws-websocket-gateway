@@ -23,8 +23,8 @@ type SubscribeRequest struct {
 }
 
 type SubscribeResponse struct {
-	event string
-	data  interface{}
+	Event string      `json:"event"`
+	Data  interface{} `json:"data"`
 }
 
 func (s *AWSGatewayService) SubscribeChannel(c echo.Context) error {
@@ -36,7 +36,8 @@ func (s *AWSGatewayService) SubscribeChannel(c echo.Context) error {
 	// TODO: Save connectionID to redis
 	fmt.Printf("\n\nReceived subscription request: %#v\n\n", req)
 	msg := map[string]string{"message": "Subscribed to channel successfully"}
-	s.App.PostToConnection(c.Request().Context(), req.ConnectionID, msg)
+	resp := SubscribeResponse{Event: req.Payload.Event, Data: msg}
+	s.App.PostToConnection(c.Request().Context(), req.ConnectionID, resp)
 
-	return c.JSON(200, SubscribeResponse{event: req.Payload.Event, data: msg})
+	return c.JSON(200, resp)
 }
