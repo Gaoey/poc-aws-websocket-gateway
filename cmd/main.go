@@ -11,6 +11,8 @@ import (
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/auth"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/aws"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/rabbitmq"
+	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/redis"
+	"github.com/Gaoey/poc-aws-websocket-gateway.git/services/authsvc"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/services/awsgw"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/services/channels"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/services/example"
@@ -39,7 +41,13 @@ func main() {
 		log.Fatalf("Failed to initialize RabbitMQ client: %v", err)
 	}
 
+	redis, err := redis.NewRedisConnection()
+	if err != nil {
+		log.Fatalf("Failed to connect to Redis: %v", err)
+	}
+
 	authApi := auth.NewAuthAPI(os.Getenv("AUTH_API_URL"))
+	authService := authsvc.NewAuthService(redis)
 	awsApp := aws.NewAWSApplication()
 	gwservice := awsgw.NewService(awsApp, authApi)
 	exampleHandler := example.NewExampleHandler(rabbitmqClient)
@@ -53,6 +61,9 @@ func main() {
 
 	e.POST("/publish", exampleHandler.PublishMessage)
 	e.POST("/sign", exampleHandler.GetSignature)
+
+	e.POST("/user/:user_id/api-keys", authService.CreateAPIKey)
+	e.POST("/validation", authService.ValidateAPIKey)
 
 	// Consumer
 	ou := channels.NewChannel(
