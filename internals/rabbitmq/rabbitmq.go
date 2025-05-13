@@ -35,6 +35,7 @@ type Config struct {
 
 // NewClient creates a new RabbitMQ client
 func NewClient(cfg Config) (*Client, error) {
+	fmt.Printf("RabbitMQ URL: %s\n", cfg.URL)
 	if cfg.ExchangeName == "" {
 		return nil, fmt.Errorf("exchange name required")
 	}

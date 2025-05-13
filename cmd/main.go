@@ -8,17 +8,24 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/auth"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/aws"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/rabbitmq"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/services/awsgw"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/services/channels"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/services/example"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/services/healthcheck"
+	"github.com/joho/godotenv"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	e := echo.New()
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -32,16 +39,20 @@ func main() {
 		log.Fatalf("Failed to initialize RabbitMQ client: %v", err)
 	}
 
+	authApi := auth.NewAuthAPI(os.Getenv("AUTH_API_URL"))
 	awsApp := aws.NewAWSApplication()
-	gwservice := awsgw.NewService(awsApp)
+	gwservice := awsgw.NewService(awsApp, authApi)
 	exampleHandler := example.NewExampleHandler(rabbitmqClient)
 
 	e.GET("/healthcheck", healthcheck.HealthCheckHandler)
 	e.GET("/connect", gwservice.ConntectWebSocket)
+	e.GET("/auth", gwservice.ConntectWebSocket)
 	e.POST("/disconnect", gwservice.DisconnectWebSocket)
 	e.POST("/subscribe", gwservice.SubscribeChannel)
 	e.POST("/send-message", gwservice.SendMessage)
+
 	e.POST("/publish", exampleHandler.PublishMessage)
+	e.POST("/sign", exampleHandler.GetSignature)
 
 	// Consumer
 	ou := channels.NewChannel(

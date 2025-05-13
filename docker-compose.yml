@@ -1,42 +1,46 @@
 version: "3.8"
 
 services:
-  rabbitmq:
-    image: rabbitmq:management
-    ports:
-      - "15672:15672" # RabbitMQ Management UI
-      - "5672:5672" # RabbitMQ AMQP protocol
-    environment:
-      RABBITMQ_DEFAULT_USER: user
-      RABBITMQ_DEFAULT_PASS: password
-    restart: always
-    volumes:
-      - rabbitmq-lib:/var/lib/rabbitmq/
-      - rabbitmq-log:/var/log/rabbitmq
-    healthcheck:
-      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
-  redis:
-    image: redis:latest
-    ports:
-      - "6379:6379" # Redis default port
-    restart: always
-    volumes:
-      - redis-data:/data
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 5s
+    rabbitmq:
+        image: rabbitmq:management
+        ports:
+            - "15672:15672" # RabbitMQ Management UI
+            - "5672:5672" # RabbitMQ AMQP protocol
+        environment:
+            RABBITMQ_DEFAULT_USER: user
+            RABBITMQ_DEFAULT_PASS: password
+        restart: always
+        volumes:
+            - rabbitmq-lib:/var/lib/rabbitmq/
+            - rabbitmq-log:/var/log/rabbitmq
+        healthcheck:
+            test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 5s
+    redis:
+        image: redis:latest
+        command: ["redis-server", "--requirepass", "password"]
+        environment:
+            - REDIS_USER=default
+            - REDIS_PASSWORD=password
+        ports:
+            - "6379:6379" # Redis default port
+        restart: always
+        volumes:
+            - redis-data:/data
+        healthcheck:
+            test: ["CMD", "redis-cli", "ping"]
+            interval: 30s
+            timeout: 10s
+            retries: 3
+            start_period: 5s
 
 volumes:
-  rabbitmq-lib:
-    driver: local
-  rabbitmq-log:
-    driver: local
-  redis-data:
-    driver: local
+    rabbitmq-lib:
+        driver: local
+    rabbitmq-log:
+        driver: local
+    redis-data:
+        driver: local
