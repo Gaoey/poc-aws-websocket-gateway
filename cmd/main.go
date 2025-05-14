@@ -69,6 +69,7 @@ func main() {
 	ou := channels.NewChannel(
 		rabbitmqClient,
 		awsApp,
+		redis,
 		"order_update",
 		"ws.order.update",
 		[]string{"ws.order.update"},

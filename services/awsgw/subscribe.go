@@ -57,18 +57,28 @@ func (s *AWSGatewayService) SubscribeChannel(c echo.Context) error {
 
 	UserID := data["user_id"]
 	key := GetWSChannelKey(string(req.Payload.Channel), UserID)
-	err = s.Redis.SAdd(c.Request().Context(), key, req.ConnectionID)
+	isMem, err := s.Redis.SIsMember(c.Request().Context(), key, req.ConnectionID)
 	if err != nil {
 		resp := domain.WSResponse{
 			Event: "subscribe",
-			Data:  map[string]string{"error": "Failed to subscribe to channel", "message": err.Error()},
+			Data:  map[string]string{"error": "Failed to check channel membership", "message": err.Error()},
 		}
 		return c.JSON(500, resp)
 	}
 
+	if !isMem {
+		err = s.Redis.SAdd(c.Request().Context(), key, req.ConnectionID)
+		if err != nil {
+			resp := domain.WSResponse{
+				Event: "subscribe",
+				Data:  map[string]string{"error": "Failed to subscribe to channel", "message": err.Error()},
+			}
+			return c.JSON(500, resp)
+		}
+	}
+
 	msg := map[string]string{"message": "Subscribed to channel successfully"}
 	resp := domain.WSResponse{Event: req.Payload.Event, Data: msg}
-	// s.App.PostToConnection(c.Request().Context(), req.ConnectionID, resp)
 
 	return c.JSON(200, resp)
 }

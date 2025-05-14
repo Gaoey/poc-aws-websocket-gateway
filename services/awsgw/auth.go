@@ -65,7 +65,5 @@ func (s *AWSGatewayService) AuthWebsocket(c echo.Context) error {
 	msg := map[string]string{"message": "authenticated successfully"}
 	r := domain.WSResponse{Event: "auth", Data: msg}
 
-	// s.App.PostToConnection(c.Request().Context(), req.ConnectionID, r)
-
 	return c.JSON(http.StatusOK, r)
 }

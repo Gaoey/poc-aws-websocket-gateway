@@ -9,7 +9,7 @@ import (
 )
 
 // ConsumeFunc is a callback function type for consuming messages
-type ConsumeFunc func(Message) error
+type ConsumeFunc func(interface{}) error
 
 // Consume starts consuming messages from a queue with the given routing keys
 func (c *Client) StartConsumer(ctx context.Context, queueName string, routingKeys []string, handler ConsumeFunc) error {
