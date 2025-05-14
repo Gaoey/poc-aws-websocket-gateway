@@ -89,7 +89,6 @@ func (s *AuthService) CreateAPIKey(c echo.Context) error {
 		UpdatedAt:   currentTime,
 	}
 
-	//Marshal
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return echo.NewHTTPError(500, "Failed to encrypt secret key")
@@ -97,7 +96,8 @@ func (s *AuthService) CreateAPIKey(c echo.Context) error {
 
 	// save to redis
 	prefix := os.Getenv("REDIS_KEY_PREFIX")
-	err = s.Redis.SetJSONData(context.Background(), prefix+":"+newApiKey, ".", jsonData)
+	key := prefix + ":" + newApiKey
+	err = s.Redis.SetJSONData(context.Background(), key, ".", jsonData)
 	if err != nil {
 		return echo.NewHTTPError(500, "Failed to save API key to Redis")
 	}

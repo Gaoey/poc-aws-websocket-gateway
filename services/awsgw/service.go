@@ -3,19 +3,19 @@ package awsgw
 import (
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/auth"
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/aws"
+	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/redis"
 )
 
 type AWSGatewayService struct {
-	// Add any necessary fields here, such as configuration or dependencies
 	App     *aws.AWSApplication
 	AuthAPI *auth.AuthAPI
+	Redis   *redis.RedisHandler
 }
 
-func NewService(app *aws.AWSApplication, auth *auth.AuthAPI) *AWSGatewayService {
-	// Initialize the AWS application or any other dependencies here
+func NewService(app *aws.AWSApplication, auth *auth.AuthAPI, redis *redis.RedisHandler) *AWSGatewayService {
 	return &AWSGatewayService{
-		// Initialize any necessary fields here
 		App:     app,
 		AuthAPI: auth,
+		Redis:   redis,
 	}
 }

@@ -49,7 +49,7 @@ func main() {
 	authApi := auth.NewAuthAPI(os.Getenv("AUTH_API_URL"))
 	authService := authsvc.NewAuthService(redis)
 	awsApp := aws.NewAWSApplication()
-	gwservice := awsgw.NewService(awsApp, authApi)
+	gwservice := awsgw.NewService(awsApp, authApi, redis)
 	exampleHandler := example.NewExampleHandler(rabbitmqClient)
 
 	e.GET("/healthcheck", healthcheck.HealthCheckHandler)

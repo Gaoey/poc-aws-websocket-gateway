@@ -7,6 +7,7 @@ import (
 	"os"
 	"reflect"
 	"strings"
+	"time"
 
 	"github.com/go-redis/redis/v8"
 )
@@ -33,8 +34,9 @@ func NewRedisConnection() (*RedisHandler, error) {
 	index := os.Getenv("REDIS_INDEX")
 	keyPrefix := os.Getenv("REDIS_KEY_PREFIX")
 
+	addr := host + ":" + port
 	redisClient := redis.NewClient(&redis.Options{
-		Addr:     host + ":" + port,
+		Addr:     addr,
 		Username: username,
 		Password: password,
 	})
@@ -85,6 +87,87 @@ func (r *RedisHandler) SetJSONData(c context.Context, key, path string, data []b
 // get json data from redis
 func (r *RedisHandler) GetJSONData(c context.Context, key, path string) (interface{}, error) {
 	reply, err := r.RedisClient.Do(c, "JSON.GET", key, path).Result()
+	if err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+func (r *RedisHandler) SetHashData(c context.Context, key string, data map[string]interface{}) error {
+	_, err := r.RedisClient.HSet(c, key, data).Result()
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *RedisHandler) GetHashData(c context.Context, key string) (map[string]string, error) {
+	reply, err := r.RedisClient.HGetAll(c, key).Result()
+	if err != nil {
+		return nil, err
+	}
+	return reply, nil
+}
+
+func (r *RedisHandler) DeleteData(c context.Context, key string) error {
+	_, err := r.RedisClient.Del(c, key).Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RedisHandler) SetData(c context.Context, key string, data interface{}) error {
+	_, err := r.RedisClient.Set(c, key, data, 0).Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RedisHandler) GetData(c context.Context, key string) (string, error) {
+	reply, err := r.RedisClient.Get(c, key).Result()
+	if err != nil {
+		return "", err
+	}
+	return reply, nil
+}
+
+func (r *RedisHandler) SetExpire(c context.Context, key string, expiration time.Duration) error {
+	_, err := r.RedisClient.Expire(c, key, expiration).Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RedisHandler) SAdd(c context.Context, key string, members ...string) error {
+	_, err := r.RedisClient.SAdd(c, key, members).Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RedisHandler) SIsMember(c context.Context, key string, member string) (bool, error) {
+	reply, err := r.RedisClient.SIsMember(c, key, member).Result()
+	if err != nil {
+		return false, err
+	}
+	return reply, nil
+}
+
+func (r *RedisHandler) SRem(c context.Context, key string, members ...string) error {
+	_, err := r.RedisClient.SRem(c, key, members).Result()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (r *RedisHandler) SMembers(c context.Context, key string) ([]string, error) {
+	reply, err := r.RedisClient.SMembers(c, key).Result()
 	if err != nil {
 		return nil, err
 	}
