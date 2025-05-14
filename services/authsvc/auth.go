@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/Gaoey/poc-aws-websocket-gateway.git/internals/redis"
@@ -154,15 +153,10 @@ func (s *AuthService) ValidateAPIKey(c echo.Context) error {
 
 	// Get Secret key
 	secretKey := os.Getenv("SECRET_KEY")
+
 	decrypt, err := secret.AESDecrypt(data.SecretKey, secretKey)
 	if err != nil {
 		return echo.NewHTTPError(500, "Failed to decrypt secret key")
-	}
-
-	// Validate Signature
-	ts, err := strconv.ParseInt(headers.Timestamp, 10, 64)
-	if err != nil {
-		return echo.NewHTTPError(400, "Invalid timestamp")
 	}
 
 	bb, err := io.ReadAll(c.Request().Body)
@@ -170,8 +164,9 @@ func (s *AuthService) ValidateAPIKey(c echo.Context) error {
 		return echo.NewHTTPError(500, "Failed to read request body")
 	}
 
-	payload := strconv.FormatInt(ts, 10) + headers.Method + headers.Path + string(bb)
+	payload := headers.Timestamp + headers.Method + headers.Path + string(bb)
 	expectedSignature := secret.SignHmacSha256([]byte(payload), decrypt)
+
 	if expectedSignature != headers.Sign {
 		return echo.NewHTTPError(401, "Invalid signature")
 	}

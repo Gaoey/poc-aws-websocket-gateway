@@ -6,11 +6,19 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+type AuthData struct {
+	APIKey    string `json:"api_key"`
+	Signature string `json:"signature"`
+	Timestamp string `json:"timestamp"`
+}
+type AuthPayload struct {
+	Event string   `json:"event"`
+	Data  AuthData `json:"data"`
+}
+
 type AuthRequest struct {
-	ConnectionID string `json:"connection_id"`
-	APIKey       string `json:"api_key"`
-	Signature    string `json:"signature"`
-	Timestamp    string `json:"timestamp"`
+	ConnectionID string      `json:"connection_id"`
+	Payload      AuthPayload `json:"payload"`
 }
 
 type AuthResponse struct {
@@ -21,13 +29,21 @@ type AuthResponse struct {
 func (s *AWSGatewayService) AuthWebsocket(c echo.Context) error {
 	var req AuthRequest
 	if err := c.Bind(&req); err != nil {
-		return c.JSON(400, map[string]string{"error": "Invalid request"})
+		resp := AuthResponse{
+			Event: "auth",
+			Data:  map[string]string{"error": "Invalid request", "message": err.Error()},
+		}
+		return c.JSON(400, resp)
 	}
 
 	// Verify
-	resp, err := s.AuthAPI.Validate("POST", req.APIKey, "")
+	resp, err := s.AuthAPI.Validate("POST", req.Payload.Data.APIKey, req.Payload.Data.Timestamp, req.Payload.Data.Signature, "")
 	if err != nil {
-		return c.JSON(500, map[string]string{"error": "Failed to validate API key"})
+		resp := AuthResponse{
+			Event: "auth",
+			Data:  map[string]string{"error": "Failed to validate API key", "message": err.Error()},
+		}
+		return c.JSON(500, resp)
 	}
 
 	// TODO: Save connection ID and user ID

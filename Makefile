@@ -11,3 +11,5 @@ clean:
 run-server:
 	go run ./cmd/main.go
 
+get-sign:
+	go test -v ./services/authsvc

@@ -54,7 +54,7 @@ func main() {
 
 	e.GET("/healthcheck", healthcheck.HealthCheckHandler)
 	e.GET("/connect", gwservice.ConntectWebSocket)
-	e.GET("/auth", gwservice.ConntectWebSocket)
+	e.POST("/auth", gwservice.AuthWebsocket)
 	e.POST("/disconnect", gwservice.DisconnectWebSocket)
 	e.POST("/subscribe", gwservice.SubscribeChannel)
 	e.POST("/send-message", gwservice.SendMessage)
